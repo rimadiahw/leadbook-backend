@@ -12,6 +12,7 @@ class ForgotController extends Controller
 {
     //
     public function forgot(Request $request){
+        //check validation
         $validator = Validator::make($request->all(), [
             'email'     => 'required|email',
         ]);
@@ -19,8 +20,9 @@ class ForgotController extends Controller
         if($validator->fails()){
             return response()->json($validator->errors(), 400);
         }
-
+        //when query success
         try {
+            //send reset link yto email
             $response = Password::sendResetLink($request->only('email'), function (Message $message) {
                 $message->subject($this->getEmailSubject());
             });
@@ -48,13 +50,16 @@ class ForgotController extends Controller
         
     }
 
+    //API reset password 
     public function reset(Request $request) {
+        //check validation
         $validator = request()->validate([
             'email' => 'required|email',
             'token' => 'required|string',
             'password' => 'required|string|confirmed'
         ]);
     
+        //query to change password
         $reset_password_status = Password::reset($validator, function ($user, $password) {
             $user->password = Hash::make($password);
             $user->save();
@@ -68,18 +73,20 @@ class ForgotController extends Controller
             ]);
         }
 
-        //return $this->respondWithMessage("Password has been successfully changed");
         return response()->json([
             'success'   => TRUE,
             'message'   => 'Password has been successfully changed',
         ]);
     }
 
+    //to redirect from link that send to email to vue route
     public function redirectVue(){
         $token = $_GET['token'];
         $email = $_GET['email'];
+
+        // can change URL in this line
         $url = 'http://localhost:8080/v-reset-password/?token='.$token.'&email='.$email;
-        // redirects to http://localhost:8888/www.google.com
+        
         return Redirect::to($url);
     }
 

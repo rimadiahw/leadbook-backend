@@ -34,12 +34,15 @@ class CompanyController extends Controller
                 ->get();
         //query to select company that contain param
         $company = Company::where('company_name', 'like', '%'.$name.'%')
-                        // ->whereNotIn('id', $fav)
                         ->get();
+        
+        //save favourite company to array
         $favIdCompany = [];
         foreach ($fav as $key => $value) {
             $favIdCompany[] = $value->company_id; 
         }
+
+        //check to know between favourite company or no 
         foreach ($company as $com) {
             if(in_array($com->id, $favIdCompany)){
                 $com->favourite = true;
@@ -48,12 +51,8 @@ class CompanyController extends Controller
                 $com->favourite = false;
             }
         }
-        // $company = Company::leftJoin('favourite_companies', 'favourite_companies.company_id', '=', 'companies.id')
-        //                 ->select('companies.company_name as companyName', 'companies.id as companyId', 'favourite_companies.id as favId', 'favourite_companies.user')
-        //                 ->where('company_name', 'like', '%'.$name.'%')
-        //                 //->groupBy('company_name')
-        //                 //->whereNotIn('id', $fav)
-        //                 ->get();
+
+        //return data API
         if (count($company) > 0) {
             return response()->json([
                 'success' => true,
@@ -69,7 +68,9 @@ class CompanyController extends Controller
         }
     }
      
+    //API to mark company as favourite
     public function markCompany($companyId){
+        //add to table favourite company 
         $favourite = FavouriteCompany::create([
             'user_id'       => Auth::user()->id,
             'company_id'    => $companyId
@@ -90,7 +91,9 @@ class CompanyController extends Controller
         }
     }
 
+    //API to unmark favourite company
     public function unmarkCompany($companyId){
+        //delete favourite company row
         $favourite = FavouriteCompany::where('user_id','=',Auth::user()->id)
                                     ->where('company_id','=',$companyId)    
                                     ->delete();
@@ -111,7 +114,6 @@ class CompanyController extends Controller
 
     public function favouriteCompany(){
         $data = User::find(11)->companies()->get();
-        //var_dump($data->get());
         if(count($data) > 0){
             return response()->json([
                 'success'   => true,
